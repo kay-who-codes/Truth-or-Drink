@@ -1,0 +1,864 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🍹 Truth or Drink</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600&display=swap');
+
+  :root {
+    --bg: #131313;
+    --bg2: #1c1c1c;
+    --bg3: #242424;
+    --text: #f0f0f0;
+    --text-muted: #888;
+    --red: #fa0000;
+    --yellow: #f3f736;
+    --green: #2a9d2a;
+    --border: #2e2e2e;
+    --radius: 14px;
+    --font-display: 'Bebas Neue', sans-serif;
+    --font-body: 'DM Sans', sans-serif;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-body);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 9999;
+    opacity: 0.35;
+  }
+
+  /* ── SCREENS ──────────────────────────────── */
+  .screen {
+    display: none;
+    min-height: 100vh;
+    padding: 24px 20px 48px;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    animation: fadeIn 0.4s ease;
+  }
+  .screen.active { display: flex; }
+  .screen-center { justify-content: center; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── LOGO / TITLE ─────────────────────────── */
+  .logo-wrap {
+    text-align: center;
+    margin-bottom: 36px;
+  }
+  .logo-wrap .eyebrow {
+    font-size: 13px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+  }
+  .logo-wrap h1 {
+    font-family: var(--font-display);
+    font-size: clamp(52px, 12vw, 88px);
+    line-height: 0.9;
+    background: linear-gradient(135deg, var(--red) 0%, var(--yellow) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .logo-wrap .subtitle {
+    margin-top: 10px;
+    color: var(--text-muted);
+    font-size: 15px;
+  }
+
+  /* ── CARD ─────────────────────────────────── */
+  .card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 28px 24px;
+    width: 100%;
+    max-width: 480px;
+  }
+
+  /* ── FORM ─────────────────────────────────── */
+  .form-group { margin-bottom: 20px; }
+  label {
+    display: block;
+    font-size: 12px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+  }
+  input[type="number"], input[type="text"] {
+    width: 100%;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 16px;
+    padding: 14px 16px;
+    outline: none;
+    transition: border-color 0.2s;
+    -webkit-appearance: none;
+  }
+  input[type="number"]:focus, input[type="text"]:focus { border-color: var(--red); }
+  input[type="number"] { -moz-appearance: textfield; }
+  input::-webkit-outer-spin-button,
+  input::-webkit-inner-spin-button { -webkit-appearance: none; }
+
+  #player-inputs { margin-bottom: 20px; }
+  .player-input-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+  .player-num {
+    width: 30px;
+    font-family: var(--font-display);
+    font-size: 22px;
+    color: var(--red);
+    flex-shrink: 0;
+    text-align: center;
+  }
+
+  /* ── BUTTONS ──────────────────────────────── */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 52px;
+    padding: 0 28px;
+    border-radius: 10px;
+    font-family: var(--font-body);
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    transition: transform 0.15s, opacity 0.15s, box-shadow 0.15s;
+    width: 100%;
+    letter-spacing: 0.3px;
+  }
+  .btn:active { transform: scale(0.97); }
+  .btn-primary {
+    background: var(--red);
+    color: #fff;
+    box-shadow: 0 4px 20px rgba(250,0,0,0.35);
+  }
+  .btn-primary:hover { box-shadow: 0 6px 28px rgba(250,0,0,0.5); }
+  .btn-secondary {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text);
+  }
+  .btn-secondary:hover { border-color: #555; }
+
+  /* ── PROGRESS BAR ─────────────────────────── */
+  .progress-wrap {
+    width: 100%;
+    max-width: 560px;
+    margin-bottom: 16px;
+    padding-top: 8px;
+  }
+  .progress-meta {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+  }
+  .progress-bar {
+    height: 4px;
+    background: var(--bg3);
+    border-radius: 99px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--red), var(--yellow));
+    border-radius: 99px;
+    transition: width 0.5s cubic-bezier(0.4,0,0.2,1);
+  }
+
+  /* ── QUESTION CARD ────────────────────────── */
+  .question-card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px 22px;
+    width: 100%;
+    max-width: 560px;
+    text-align: center;
+    margin-bottom: 16px;
+    position: relative;
+    overflow: hidden;
+  }
+  .question-card::before {
+    content: '"';
+    font-family: var(--font-display);
+    font-size: 120px;
+    color: var(--red);
+    opacity: 0.07;
+    position: absolute;
+    top: -20px;
+    left: 10px;
+    line-height: 1;
+  }
+  .round-badge {
+    display: inline-flex;
+    align-items: center;
+    background: rgba(250,0,0,0.15);
+    border: 1px solid rgba(250,0,0,0.3);
+    color: var(--red);
+    padding: 4px 12px;
+    border-radius: 99px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+  .question-text {
+    font-size: clamp(16px, 3.8vw, 20px);
+    line-height: 1.55;
+    font-weight: 500;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* ── PLAYER VOTE ROWS ─────────────────────── */
+  .players-vote-list {
+    width: 100%;
+    max-width: 560px;
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+    margin-bottom: 12px;
+  }
+
+  .player-vote-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 11px 14px;
+    transition: border-color 0.25s, background 0.25s;
+  }
+  .player-vote-row.voted-truth {
+    border-color: #2a9d2a;
+    background: rgba(42,157,42,0.08);
+  }
+  .player-vote-row.voted-drink {
+    border-color: var(--red);
+    background: rgba(250,0,0,0.08);
+  }
+
+  .pv-name {
+    flex: 1;
+    font-weight: 600;
+    font-size: 15px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .pv-status {
+    font-size: 20px;
+    width: 26px;
+    text-align: center;
+    flex-shrink: 0;
+  }
+  .pv-status.popped { animation: pop 0.25s cubic-bezier(0.34,1.56,0.64,1); }
+  @keyframes pop {
+    from { transform: scale(0.4); }
+    to   { transform: scale(1); }
+  }
+
+  .pv-btns {
+    display: flex;
+    gap: 7px;
+    flex-shrink: 0;
+  }
+  .pv-btn {
+    min-height: 42px;
+    min-width: 82px;
+    padding: 0 14px;
+    border-radius: 8px;
+    font-family: var(--font-body);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    border: 2px solid transparent;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    transition: transform 0.12s, opacity 0.18s, box-shadow 0.15s, border-color 0.15s;
+  }
+  .pv-btn:active { transform: scale(0.94); }
+  .pv-btn-truth {
+    background: linear-gradient(135deg, #1a6f1a, #2a9d2a);
+    color: #fff;
+    box-shadow: 0 3px 10px rgba(42,157,42,0.28);
+  }
+  .pv-btn-drink {
+    background: linear-gradient(135deg, #7a1010, var(--red));
+    color: #fff;
+    box-shadow: 0 3px 10px rgba(250,0,0,0.28);
+  }
+  /* Unchosen sibling fades; chosen glows */
+  .pv-btn.unchosen {
+    opacity: 0.32;
+    transform: scale(0.92);
+    box-shadow: none;
+  }
+  .pv-btn.active-choice {
+    border-color: #fff;
+    box-shadow: 0 0 0 2px rgba(255,255,255,0.25);
+  }
+
+  /* ── WAITING HINT ─────────────────────────── */
+  .waiting-hint {
+    font-size: 13px;
+    color: var(--text-muted);
+    text-align: center;
+    letter-spacing: 0.4px;
+    margin-bottom: 4px;
+    min-height: 20px;
+  }
+
+  /* ── SKIP BTN ─────────────────────────────── */
+  .skip-btn {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-family: var(--font-body);
+    font-size: 13px;
+    cursor: pointer;
+    padding: 10px;
+    transition: color 0.2s;
+    text-decoration: underline;
+  }
+  .skip-btn:hover { color: var(--text); }
+
+  /* ── NEXT FLASH OVERLAY ───────────────────── */
+  #next-flash {
+    position: fixed;
+    inset: 0;
+    background: rgba(243,247,54,0.07);
+    pointer-events: none;
+    opacity: 0;
+    z-index: 100;
+    transition: opacity 0.15s;
+  }
+  #next-flash.flash { opacity: 1; }
+
+  /* ── SCOREBOARD / RESULTS ─────────────────── */
+  .scoreboard { width: 100%; max-width: 480px; margin-bottom: 24px; }
+  .score-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 13px 16px;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    margin-bottom: 8px;
+  }
+  .score-row.winner { border-color: var(--yellow); background: rgba(243,247,54,0.05); }
+  .score-player { font-weight: 600; font-size: 16px; }
+  .score-chips { display: flex; gap: 8px; align-items: center; }
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 10px;
+    border-radius: 99px;
+    font-size: 13px;
+    font-weight: 600;
+  }
+  .chip-truth { background: rgba(42,157,42,0.2); color: #4cde4c; }
+  .chip-drink { background: rgba(250,0,0,0.2); color: #ff6060; }
+
+  /* ── MEDALS ───────────────────────────────── */
+  .medals-wrap { width: 100%; max-width: 480px; margin-bottom: 28px; }
+  .medal-card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 17px 20px;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    animation: popIn 0.4s cubic-bezier(0.34,1.56,0.64,1) both;
+  }
+  .medal-card:nth-child(2) { animation-delay: 0.07s; }
+  .medal-card:nth-child(3) { animation-delay: 0.14s; }
+  .medal-card:nth-child(4) { animation-delay: 0.21s; }
+  @keyframes popIn {
+    from { opacity: 0; transform: scale(0.8); }
+    to   { opacity: 1; transform: scale(1); }
+  }
+  .medal-icon { font-size: 32px; flex-shrink: 0; }
+  .medal-title {
+    font-family: var(--font-display);
+    font-size: 20px;
+    color: var(--yellow);
+    line-height: 1;
+  }
+  .medal-desc { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+  .medal-name { font-weight: 600; margin-top: 4px; font-size: 14px; }
+
+  .results-title {
+    font-family: var(--font-display);
+    font-size: clamp(26px, 6vw, 40px);
+    text-align: center;
+    margin-bottom: 4px;
+  }
+  .results-sub { text-align: center; color: var(--text-muted); font-size: 13px; margin-bottom: 18px; }
+
+  /* ── ERROR ────────────────────────────────── */
+  .error-msg { color: var(--red); font-size: 13px; margin-top: 8px; display: none; }
+  .error-msg.show { display: block; }
+
+  /* ── RESPONSIVE ───────────────────────────── */
+  @media (max-width: 420px) {
+    .pv-btn { min-width: 70px; font-size: 12px; padding: 0 10px; }
+    .pv-name { font-size: 14px; }
+    .card { padding: 20px 16px; }
+  }
+  @media (max-width: 340px) {
+    .pv-btns { flex-direction: column; gap: 5px; }
+  }
+</style>
+</head>
+<body>
+
+<div id="next-flash"></div>
+
+<!-- ══ SCREEN 1: SETUP ════════════════════════════════════ -->
+<section class="screen screen-center active" id="screen-setup">
+  <div class="logo-wrap">
+    <p class="eyebrow">A party game for</p>
+    <h1>Truth<br>or<br>Drink</h1>
+    <p class="subtitle">Spill it — or sip it.</p>
+  </div>
+  <div class="card">
+    <div class="form-group">
+      <label for="num-players">Number of Players</label>
+      <input type="number" id="num-players" min="2" max="12" placeholder="e.g. 4" />
+    </div>
+    <div class="form-group">
+      <label for="num-rounds">Number of Rounds</label>
+      <input type="number" id="num-rounds" min="1" max="20" placeholder="e.g. 5" />
+    </div>
+    <p class="error-msg" id="setup-error">Please enter valid values (min 2 players, min 1 round).</p>
+    <button class="btn btn-primary" onclick="goToNames()">Next →</button>
+  </div>
+</section>
+
+<!-- ══ SCREEN 2: PLAYER NAMES ═══════════════════════════ -->
+<section class="screen screen-center" id="screen-names">
+  <div class="logo-wrap">
+    <p class="eyebrow">Step 2 of 2</p>
+    <h1>Who's<br>Playing?</h1>
+  </div>
+  <div class="card">
+    <div id="player-inputs"></div>
+    <p class="error-msg" id="names-error">Every player needs a name!</p>
+    <button class="btn btn-primary" onclick="startGame()">Let's Go 🍹</button>
+  </div>
+</section>
+
+<!-- ══ SCREEN 3: GAMEPLAY ════════════════════════════════ -->
+<section class="screen" id="screen-game">
+  <div class="progress-wrap">
+    <div class="progress-meta">
+      <span id="progress-label">Round 1 of 1</span>
+      <span id="progress-frac">0 / 0</span>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
+  </div>
+
+  <div class="question-card">
+    <div class="round-badge" id="round-badge">Round 1</div>
+    <p class="question-text" id="question-text">Loading…</p>
+  </div>
+
+  <div class="players-vote-list" id="players-vote-list"></div>
+
+  <p class="waiting-hint" id="waiting-hint"></p>
+  <button class="skip-btn" onclick="skipQuestion()">Skip this question</button>
+</section>
+
+<!-- ══ SCREEN 4: RESULTS ══════════════════════════════════ -->
+<section class="screen screen-center" id="screen-results">
+  <div class="logo-wrap" style="margin-bottom:16px;">
+    <p class="eyebrow">Game Over</p>
+    <h1>The<br>Verdict</h1>
+  </div>
+
+  <div class="medals-wrap" id="medals-wrap"></div>
+
+  <div class="results-title">Full Scoreboard</div>
+  <p class="results-sub">Ranked by truths told</p>
+  <div class="scoreboard" id="scoreboard"></div>
+
+  <div style="width:100%;max-width:480px;">
+    <button class="btn btn-primary" onclick="restartGame()">Play Again 🎉</button>
+    <div style="height:10px"></div>
+    <button class="btn btn-secondary" onclick="goHome()">Change Players</button>
+  </div>
+</section>
+
+<script>
+// ── QUESTIONS ─────────────────────────────────────────────
+const QUESTIONS = [
+  "What's the most embarrassing thing that's happened to you in public?",
+  "Have you ever lied to get out of plans with a friend? What did you say?",
+  "What's the longest you've gone without showering?",
+  "Have you ever stolen something, even something small?",
+  "What's the pettiest reason you've ever ended a friendship or relationship?",
+  "Have you ever blamed someone else for something you did?",
+  "What's something you've done that you'd be mortified if your parents found out?",
+  "Have you ever faked being sick to avoid work or school?",
+  "What's your most controversial food opinion?",
+  "Have you ever snooped through someone's phone or messages?",
+  "What's the worst gift you've ever received, and what did you say when you got it?",
+  "Have you ever laughed at completely the wrong moment? What happened?",
+  "What's the most childish thing you still do?",
+  "Have you ever cheated in a board game or video game to win?",
+  "What's the most embarrassing thing on your browser history?",
+  "Have you ever ghosted someone? Do you regret it?",
+  "What's the weirdest thing you do when you're home alone?",
+  "Have you ever talked badly about someone who was in the next room?",
+  "What's the biggest lie you've ever told on a first date?",
+  "Have you ever pretended to know something you had absolutely no clue about?",
+  "What's the most ridiculous reason you've ever cried?",
+  "Have you ever Googled yourself? What did you find?",
+  "What's an opinion you have that most people in this room would disagree with?",
+  "Have you ever walked into a wall or door in front of people?",
+  "What's the most embarrassing voicemail or text you've ever sent by mistake?",
+  "Have you ever fallen asleep somewhere you definitely shouldn't have?",
+  "What's the most extreme thing you've done to impress someone?",
+  "Have you ever eaten food you dropped on the floor? How long had it been down there?",
+  "What's the most embarrassing nickname you've ever had?",
+  "Have you ever pretended to be on a phone call to avoid someone?",
+  "What's a secret you've kept from your best friend?",
+  "Have you ever sent a message to the wrong person? What did it say?",
+  "What's the most embarrassing thing you've bought online?",
+  "Have you ever cheated on a test or exam?",
+  "What's the worst date you've ever been on?",
+  "Have you ever been caught talking to yourself?",
+  "What's a habit you have that others would find gross?",
+  "Have you ever made up an excuse to leave a party early?",
+  "What's the most you've ever spent on something completely unnecessary?",
+  "Have you ever liked your own social media post with a fake account?"
+];
+
+// ── STATE ──────────────────────────────────────────────────
+let state = {
+  players: [],
+  rounds: 0,
+  scores: {},        // { name: { truth: 0, drink: 0 } }
+  currentRound: 1,
+  usedQuestions: [],
+  roundVotes: {},    // { name: 'truth' | 'drink' | null }
+  advancing: false,  // guard to prevent double-advance
+};
+
+// ── HELPERS ────────────────────────────────────────────────
+function show(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0, 0);
+}
+
+function pickQuestion() {
+  if (state.usedQuestions.length >= QUESTIONS.length) state.usedQuestions = [];
+  const pool = QUESTIONS.map((q, i) => ({ q, i })).filter(({ i }) => !state.usedQuestions.includes(i));
+  const pick = pool[Math.floor(Math.random() * pool.length)];
+  state.usedQuestions.push(pick.i);
+  return pick.q;
+}
+
+function flashScreen() {
+  const el = document.getElementById('next-flash');
+  el.classList.add('flash');
+  setTimeout(() => el.classList.remove('flash'), 220);
+}
+
+// safe CSS.escape polyfill
+function cssEscape(str) {
+  return str.replace(/[^\w-]/g, c => '\\' + c);
+}
+
+// ── SETUP → NAMES ─────────────────────────────────────────
+function goToNames() {
+  const n = parseInt(document.getElementById('num-players').value);
+  const r = parseInt(document.getElementById('num-rounds').value);
+  const err = document.getElementById('setup-error');
+  if (!n || n < 2 || n > 12 || !r || r < 1 || r > 20) {
+    err.classList.add('show'); return;
+  }
+  err.classList.remove('show');
+  state.players = Array.from({ length: n });
+  state.rounds = r;
+
+  const wrap = document.getElementById('player-inputs');
+  wrap.innerHTML = '';
+  for (let i = 0; i < n; i++) {
+    wrap.innerHTML += `
+      <div class="player-input-row">
+        <span class="player-num">${i + 1}</span>
+        <input type="text" placeholder="Player ${i + 1}'s name" id="pname-${i}" maxlength="20" />
+      </div>`;
+  }
+  show('screen-names');
+  setTimeout(() => document.getElementById('pname-0').focus(), 50);
+}
+
+// ── NAMES → GAME ───────────────────────────────────────────
+function startGame() {
+  const names = [];
+  for (let i = 0; i < state.players.length; i++) {
+    const v = document.getElementById(`pname-${i}`).value.trim();
+    if (!v) { document.getElementById('names-error').classList.add('show'); return; }
+    names.push(v);
+  }
+  document.getElementById('names-error').classList.remove('show');
+  state.players = names;
+  state.scores = {};
+  names.forEach(p => state.scores[p] = { truth: 0, drink: 0 });
+  state.currentRound = 1;
+  state.usedQuestions = [];
+  state.advancing = false;
+  loadRound();
+  show('screen-game');
+}
+
+// ── LOAD ROUND ─────────────────────────────────────────────
+function loadRound() {
+  state.advancing = false;
+  state.roundVotes = {};
+  state.players.forEach(p => state.roundVotes[p] = null);
+
+  const done = state.currentRound - 1;
+  const total = state.rounds;
+
+  document.getElementById('round-badge').textContent = `Round ${state.currentRound}`;
+  document.getElementById('progress-label').textContent = `Round ${state.currentRound} of ${total}`;
+  document.getElementById('progress-frac').textContent = `${done} / ${total}`;
+  document.getElementById('progress-fill').style.width = `${(done / total) * 100}%`;
+  document.getElementById('question-text').textContent = pickQuestion();
+
+  renderVoteList();
+  updateHint();
+}
+
+// ── RENDER PLAYER VOTE ROWS ────────────────────────────────
+function renderVoteList() {
+  const list = document.getElementById('players-vote-list');
+  list.innerHTML = state.players.map((p, idx) => {
+    const safeId = `pv-${idx}`;
+    return `
+      <div class="player-vote-row" id="${safeId}-row">
+        <span class="pv-name">${escHtml(p)}</span>
+        <span class="pv-status" id="${safeId}-status">⬜</span>
+        <div class="pv-btns">
+          <button class="pv-btn pv-btn-truth" id="${safeId}-truth"
+            onclick="vote(${idx},'truth')">✅ Truth</button>
+          <button class="pv-btn pv-btn-drink" id="${safeId}-drink"
+            onclick="vote(${idx},'drink')">🍹 Drink</button>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function escHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── VOTE ───────────────────────────────────────────────────
+function vote(playerIdx, choice) {
+  if (state.advancing) return;
+  const p = state.players[playerIdx];
+  const safeId = `pv-${playerIdx}`;
+
+  state.roundVotes[p] = choice;
+
+  const row    = document.getElementById(`${safeId}-row`);
+  const status = document.getElementById(`${safeId}-status`);
+  const tBtn   = document.getElementById(`${safeId}-truth`);
+  const dBtn   = document.getElementById(`${safeId}-drink`);
+
+  row.classList.remove('voted-truth', 'voted-drink');
+  row.classList.add(choice === 'truth' ? 'voted-truth' : 'voted-drink');
+
+  status.textContent = choice === 'truth' ? '✅' : '🍹';
+  status.classList.remove('popped');
+  void status.offsetWidth;
+  status.classList.add('popped');
+
+  tBtn.classList.toggle('active-choice', choice === 'truth');
+  tBtn.classList.toggle('unchosen',      choice === 'drink');
+  dBtn.classList.toggle('active-choice', choice === 'drink');
+  dBtn.classList.toggle('unchosen',      choice === 'truth');
+
+  updateHint();
+  checkAllVoted();
+}
+
+// ── HINT ───────────────────────────────────────────────────
+function updateHint() {
+  const pending = state.players.filter(p => state.roundVotes[p] === null);
+  const el = document.getElementById('waiting-hint');
+  if (pending.length === 0) {
+    el.textContent = '✓ Everyone decided — moving on…';
+  } else if (pending.length === 1) {
+    el.textContent = `Waiting for ${pending[0]}…`;
+  } else {
+    el.textContent = `Waiting for ${pending.length} players…`;
+  }
+}
+
+// ── CHECK ALL VOTED ────────────────────────────────────────
+function checkAllVoted() {
+  const allDone = state.players.every(p => state.roundVotes[p] !== null);
+  if (!allDone || state.advancing) return;
+  state.advancing = true;
+
+  // Commit scores
+  state.players.forEach(p => state.scores[p][state.roundVotes[p]]++);
+
+  flashScreen();
+
+  if (state.currentRound >= state.rounds) {
+    setTimeout(showResults, 700);
+  } else {
+    state.currentRound++;
+    setTimeout(loadRound, 700);
+  }
+}
+
+// ── SKIP QUESTION ──────────────────────────────────────────
+function skipQuestion() {
+  if (state.advancing) return;
+  state.players.forEach(p => state.roundVotes[p] = null);
+  document.getElementById('question-text').textContent = pickQuestion();
+  renderVoteList();
+  updateHint();
+}
+
+// ── RESULTS ────────────────────────────────────────────────
+function showResults() {
+  // Progress bar to 100%
+  document.getElementById('progress-fill').style.width = '100%';
+
+  const pl = state.players;
+
+  // Truthteller — most truths
+  const topTruth = [...pl].sort((a, b) => state.scores[b].truth - state.scores[a].truth)[0];
+
+  // Sealed Lips — most drinks
+  const topDrink = [...pl].sort((a, b) => state.scores[b].drink - state.scores[a].drink)[0];
+
+  // Balanced — smallest |truth - drink| difference
+  const balDiff = p => Math.abs(state.scores[p].truth - state.scores[p].drink);
+  const topBalanced = [...pl].sort((a, b) => balDiff(a) - balDiff(b))[0];
+
+  // Party Animal — highest total
+  const topTotal = [...pl].sort((a, b) =>
+    (state.scores[b].truth + state.scores[b].drink) - (state.scores[a].truth + state.scores[a].drink))[0];
+
+  const medals = [
+    {
+      icon: '🏆', title: 'Truthteller',
+      desc: 'Told the most truths',
+      name: topTruth, stat: `${state.scores[topTruth].truth} truths`
+    },
+    {
+      icon: '🤐', title: 'Sealed Lips',
+      desc: 'Drank instead of telling',
+      name: topDrink, stat: `${state.scores[topDrink].drink} drinks`
+    },
+    {
+      icon: '⚖️', title: 'Balanced',
+      desc: 'Truths & drinks closest to equal',
+      name: topBalanced,
+      stat: `${state.scores[topBalanced].truth}T / ${state.scores[topBalanced].drink}D (diff: ${balDiff(topBalanced)})`
+    },
+    {
+      icon: '🎉', title: 'Party Animal',
+      desc: 'Most total rounds played',
+      name: topTotal,
+      stat: `${state.scores[topTotal].truth + state.scores[topTotal].drink} rounds`
+    }
+  ];
+
+  document.getElementById('medals-wrap').innerHTML = medals.map(m => `
+    <div class="medal-card">
+      <div class="medal-icon">${m.icon}</div>
+      <div>
+        <div class="medal-title">${m.title}</div>
+        <div class="medal-desc">${m.desc}</div>
+        <div class="medal-name">${escHtml(m.name)} — ${m.stat}</div>
+      </div>
+    </div>`).join('');
+
+  const sorted = [...pl].sort((a, b) => state.scores[b].truth - state.scores[a].truth);
+  document.getElementById('scoreboard').innerHTML = sorted.map(p => `
+    <div class="score-row ${p === topTruth ? 'winner' : ''}">
+      <span class="score-player">${escHtml(p)}</span>
+      <div class="score-chips">
+        <span class="chip chip-truth">✅ ${state.scores[p].truth}</span>
+        <span class="chip chip-drink">🍹 ${state.scores[p].drink}</span>
+      </div>
+    </div>`).join('');
+
+  show('screen-results');
+}
+
+// ── RESTART ────────────────────────────────────────────────
+function restartGame() {
+  state.scores = {};
+  state.players.forEach(p => state.scores[p] = { truth: 0, drink: 0 });
+  state.currentRound = 1;
+  state.usedQuestions = [];
+  state.advancing = false;
+  loadRound();
+  show('screen-game');
+}
+
+function goHome() {
+  document.getElementById('num-players').value = '';
+  document.getElementById('num-rounds').value = '';
+  show('screen-setup');
+}
+</script>
+</body>
+</html>
